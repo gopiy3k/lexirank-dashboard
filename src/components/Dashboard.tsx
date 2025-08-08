@@ -54,7 +54,7 @@ export default function Dashboard() {
         </TabsList>
 
         <TabsContent value="overview">
-          <BrandChart brand={brand} results={results} />
+            <BrandChart results={results} />
         </TabsContent>
 
         <TabsContent value="responses">
