@@ -14,9 +14,23 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
   auth: { persistSession: false },
 });
 
+// Define a type for our cache data structure
+type CacheData = {
+    scores: Score[];
+    overallScore: number;
+};
+
+// Define a type for a single score object
+interface Score {
+    ai_engine: string;
+    brand: string;
+    lexi_rank_score: number;
+}
+
 // Simple in-memory cache (per server instance). TTL in ms.
 const CACHE_TTL = 60 * 1000; // 1 minute
-let _cache: { ts: number; key: string; data: any } | null = null;
+// FIX: Type the cache to hold our specific data structure or null.
+let _cache: { ts: number; key: string; data: CacheData } | null = null;
 
 function cacheKeyFor(q: URLSearchParams) {
   return JSON.stringify({
@@ -42,9 +56,11 @@ export async function GET(req: Request) {
     }
 
     // prepare rpc params
-    let engine_weights = {};
+    let engine_weights: { [key: string]: number } = {};
     if (weightsParam) {
-      try { engine_weights = JSON.parse(weightsParam); } catch (err) {
+      try {
+        engine_weights = JSON.parse(weightsParam);
+      } catch { // FIX: Removed unused 'err' variable.
         return NextResponse.json({ error: 'Invalid engine_weights JSON' }, { status: 400 });
       }
     }
@@ -63,10 +79,12 @@ export async function GET(req: Request) {
     }
 
     // data is an array of rows { ai_engine, brand, lexi_rank_score }
-    const rows = Array.isArray(data) ? data : [];
+    // FIX: Type the data coming from the RPC call.
+    const rows: Score[] = Array.isArray(data) ? data : [];
 
     // normalize lexi_rank_score to number
-    const scores = rows.map((r: any) => ({
+    // FIX: Use the 'Score' type for the row parameter 'r'.
+    const scores: Score[] = rows.map((r: Score) => ({
       ai_engine: r.ai_engine,
       brand: r.brand,
       lexi_rank_score: Number(r.lexi_rank_score) || 0,
@@ -75,13 +93,13 @@ export async function GET(req: Request) {
     const overallScore =
       scores.length > 0 ? scores.reduce((s, r) => s + r.lexi_rank_score, 0) / scores.length : 0;
 
-    const payload = { scores, overallScore };
+    const payload: CacheData = { scores, overallScore };
 
     // store in memory cache
     _cache = { ts: Date.now(), key, data: payload };
 
     return NextResponse.json(payload);
-  } catch (err: any) {
+  } catch (err: unknown) { // FIX: Use 'unknown' instead of 'any' for better type safety in catch blocks.
     console.error('Unexpected error in lexi-rank API', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
