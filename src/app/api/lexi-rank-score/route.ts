@@ -29,7 +29,6 @@ interface Payload {
 
 // Simple in-memory cache (per server instance). TTL in ms.
 const CACHE_TTL = 60 * 1000; // 1 minute
-// FIX: Type the cache to hold our specific data structure or null.
 let _cache: { ts: number; key: string; data: Payload } | null = null;
 
 function cacheKeyFor(q: URLSearchParams) {
@@ -79,15 +78,18 @@ export async function GET(req: Request) {
     }
 
     // data is an array of rows { ai_engine, brand, lexi_rank_score }
-    // FIX: Type the data coming from the RPC call.
     const rows: unknown[] = Array.isArray(data) ? data : [];
 
-    // FIX: Type the row 'r' with a proper type guard or assertion.
-    const scores: Score[] = rows.map((r: any) => ({
-      ai_engine: r.ai_engine,
-      brand: r.brand,
-      lexi_rank_score: Number(r.lexi_rank_score) || 0,
-    }));
+    // FIX: Replaced '(r: any)' with a type-safe mapping function.
+    const scores: Score[] = rows.map((r: unknown) => {
+      // Assert 'r' as a generic object to safely access its properties.
+      const row = r as Record<string, unknown>;
+      return {
+        ai_engine: String(row.ai_engine ?? ''),
+        brand: String(row.brand ?? ''),
+        lexi_rank_score: Number(row.lexi_rank_score) || 0,
+      };
+    });
 
     const overallScore =
       scores.length > 0 ? scores.reduce((s, r) => s + r.lexi_rank_score, 0) / scores.length : 0;
