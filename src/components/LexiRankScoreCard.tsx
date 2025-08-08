@@ -22,7 +22,7 @@ export function LexiRankScoreCard({ title, score, className, ...props }: Props) 
     <div 
       className={cn(
         "rounded-2xl p-4 shadow-md border bg-card text-card-foreground", // Combining user styles with default card styles
-        className
+        className ?? '' // FIX: Provide an empty string fallback for className
       )} 
       {...props}
     >
