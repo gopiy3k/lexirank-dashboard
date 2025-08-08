@@ -58,7 +58,7 @@ export default function Dashboard() {
         </TabsContent>
 
         <TabsContent value="responses">
-          <VisibilityTable brand={brand} results={results} />
+           <VisibilityTable results={results} />
         </TabsContent>
       </Tabs>
     </section>
