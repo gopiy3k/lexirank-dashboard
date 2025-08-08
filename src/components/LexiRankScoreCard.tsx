@@ -1,6 +1,7 @@
 // components/LexiRankScoreCard.tsx
 import * as React from "react"
-import { Card, CardContent } from "@/components/ui/card";
+// We only need CardContent, as the Card component itself is causing issues.
+import { CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils"; // Make sure this import is correct for your project structure
 
 // Define the props for your component, extending standard div attributes
@@ -15,9 +16,16 @@ export function LexiRankScoreCard({ title, score, className, ...props }: Props) 
     ? score.toFixed(3)
     : '—';
 
+  // We create our own "Card" with a div, applying the necessary styles.
+  // This avoids passing props to the problematic <Card> component.
   return (
-    // Use the `cn` utility to merge default styles with any passed in className
-    <Card className={cn("rounded-2xl p-4 shadow-md", className)} {...props}>
+    <div 
+      className={cn(
+        "rounded-2xl p-4 shadow-md border bg-card text-card-foreground", // Combining user styles with default card styles
+        className
+      )} 
+      {...props}
+    >
       <CardContent className="flex flex-col space-y-2 p-0">
         <div className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
           {title}
@@ -26,6 +34,6 @@ export function LexiRankScoreCard({ title, score, className, ...props }: Props) 
           {roundedScore}
         </div>
       </CardContent>
-    </Card>
+    </div>
   );
 }
