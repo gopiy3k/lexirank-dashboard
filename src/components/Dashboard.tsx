@@ -1,14 +1,12 @@
 'use client';
 
 import { useEffect, useState } from "react";
-// 1. Removed unused 'Card' and 'CardContent' imports
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { BrandChart } from "./BrandChart";
 import { VisibilityTable } from "./VisibilityTable";
+import { ScoreCard } from "./ScoreCard"; // ✅ import ScoreCard
 import { supabase } from "@/lib/supabase";
 
-// 2. Define a reusable type for your Supabase data.
-// (Best practice: Move this interface to a central file like 'src/lib/types.ts' and import it here and in the other components)
 export interface VisibilityResult {
   id: number;
   run_at: string;
@@ -18,16 +16,20 @@ export interface VisibilityResult {
   brand: string;
 }
 
-export default function Dashboard() {
-  // 3. Removed 'setBrand' as it was not being used.
-  const [brand] = useState("LexiRank");
-  // 4. Used the specific 'VisibilityResult' type instead of 'any'.
-  const [results, setResults] = useState<VisibilityResult[]>([]);
+interface LexiRankScore {
+  ai_engine: string;
+  brand: string;
+  lexi_rank_score: number;
+}
 
+export default function Dashboard() {
+  const [brand] = useState("LexiRank");
+  const [results, setResults] = useState<VisibilityResult[]>([]);
+  const [scores, setScores] = useState<LexiRankScore[]>([]); // ✅ State for API score
+
+  // Fetch visibility results from Supabase
   useEffect(() => {
     async function fetchData() {
-      // In a real app, you might use the 'brand' variable to filter your query:
-      // .eq('brand', brand)
       const { data, error } = await supabase
         .from("visibility_results")
         .select("*")
@@ -43,6 +45,21 @@ export default function Dashboard() {
     fetchData();
   }, [brand]);
 
+  // ✅ Fetch LexiRank scores from your API
+  useEffect(() => {
+    async function fetchScore() {
+      try {
+        const res = await fetch("/api/lexi-rank-score");
+        const json = await res.json();
+        setScores(json.scores || []);
+      } catch (err) {
+        console.error("❌ Error fetching LexiRank score:", err);
+      }
+    }
+
+    fetchScore();
+  }, []);
+
   return (
     <section className="space-y-4">
       <h1 className="text-2xl font-semibold">AI Visibility Dashboard</h1>
@@ -53,12 +70,25 @@ export default function Dashboard() {
           <TabsTrigger value="responses">Raw Responses</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview">
-            <BrandChart results={results} />
+        <TabsContent value="overview" className="space-y-4">
+          {/* ✅ Score cards */}
+          <div className="flex flex-wrap gap-4">
+            {scores.map((score) => (
+              <ScoreCard
+                key={score.ai_engine}
+                aiEngine={score.ai_engine}
+                brand={score.brand}
+                score={score.lexi_rank_score}
+              />
+            ))}
+          </div>
+
+          {/* 👇 Existing chart */}
+          <BrandChart results={results} />
         </TabsContent>
 
         <TabsContent value="responses">
-           <VisibilityTable results={results} />
+          <VisibilityTable results={results} />
         </TabsContent>
       </Tabs>
     </section>
