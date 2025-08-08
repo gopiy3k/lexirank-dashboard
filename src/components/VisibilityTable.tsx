@@ -1,12 +1,14 @@
 import { Card, CardContent } from "@/components/ui/card";
 
-export function VisibilityTable({
-  brand,
-  results
-}: {
-  brand: string;
-  results: any[];
-}) {
+// 1. Define a specific type for the objects in the 'results' array.
+interface ResultRow {
+  run_at: string;
+  prompt: string;
+  appears: boolean;
+  ai_engine: string;
+}
+
+export function VisibilityTable({ results }: { results: ResultRow[] }) { // 2. Use the new type and remove the unused 'brand' prop.
   return (
     <Card>
       <CardContent>

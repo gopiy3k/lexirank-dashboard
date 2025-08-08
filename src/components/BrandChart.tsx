@@ -1,16 +1,18 @@
+"use client";
+
 import {
   LineChart, Line, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { Card, CardContent } from "@/components/ui/card";
 
-export function BrandChart({
-  brand,
-  results
-}: {
-  brand: string;
-  results: any[];
-}) {
+// 1. Define a specific type for the objects in the 'results' array.
+interface ResultItem {
+  run_at: string; // Assuming run_at is a date string
+  appears: boolean;
+}
+
+export function BrandChart({ results }: { results: ResultItem[] }) { // 2. Use the new type and remove the unused 'brand' prop.
   const chartData = results.map((r) => ({
     date: new Date(r.run_at).toLocaleDateString("en-IN", {
       day: "numeric",
